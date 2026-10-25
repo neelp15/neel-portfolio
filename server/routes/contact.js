@@ -1,22 +1,11 @@
 
 const express = require("express");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const Contact = require("../models/Contact");
 
 const router = express.Router();
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: Number(process.env.SMTP_PORT || 465),
-  secure: Number(process.env.SMTP_PORT || 465) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 20000,
-  greetingTimeout: 20000,
-  socketTimeout: 30000,
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 router.post("/", async (req, res) => {
   try {
@@ -48,11 +37,21 @@ router.post("/", async (req, res) => {
 
     let emailSent = false;
 
-    // Send an email notification after the message is saved.
+    // Send the notification through Resend's HTTPS API.
     try {
-      await transporter.sendMail({
-        from: `"Neel Portfolio" <${process.env.SMTP_USER}>`,
-        to: process.env.CONTACT_RECEIVER || process.env.SMTP_USER,
+      if (!process.env.RESEND_API_KEY) {
+        throw new Error("RESEND_API_KEY is not configured.");
+      }
+
+      if (!process.env.CONTACT_RECEIVER) {
+        throw new Error("CONTACT_RECEIVER is not configured.");
+      }
+
+      const { data, error } = await resend.emails.send({
+        from:
+          process.env.RESEND_FROM_EMAIL ||
+          "Neel Portfolio <onboarding@resend.dev>",
+        to: [process.env.CONTACT_RECEIVER],
         replyTo: contact.email,
         subject: `New portfolio message: ${contact.subject}`,
         text: [
@@ -69,14 +68,19 @@ router.post("/", async (req, res) => {
         ].join("\n"),
       });
 
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!data?.id) {
+        throw new Error("Resend did not return an email ID.");
+      }
+
       emailSent = true;
-      console.log("Contact notification email sent successfully.");
+      console.log("Contact notification accepted by Resend:", data.id);
     } catch (emailError) {
       // The message is already saved, so don't discard it.
-      console.error(
-        "Email notification failed:",
-        emailError.message
-      );
+      console.error("Email notification failed:", emailError.message);
     }
 
     return res.status(201).json({
