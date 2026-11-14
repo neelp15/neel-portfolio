@@ -1,5 +1,5 @@
 
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -18,7 +18,7 @@ import Logo from "./Logo";
 
 import "./App.css";
 
-// Load the 3D scene in a separate JavaScript chunk.
+// Load the 3D robot in a separate JavaScript chunk.
 const RobotScene = lazy(() => import("./RobotScene"));
 
 const navigation = [
@@ -29,6 +29,7 @@ const navigation = [
   "Contact",
 ];
 
+// Loading animation displayed before the robot is ready.
 function RobotFallback() {
   return (
     <div
@@ -44,6 +45,38 @@ function RobotFallback() {
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showRobot, setShowRobot] = useState(false);
+
+  // Delay robot initialization to prioritize initial page content.
+  useEffect(() => {
+    let timeoutId;
+    let idleId;
+
+    const startRobot = () => {
+      setShowRobot(true);
+    };
+
+    timeoutId = window.setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        idleId = window.requestIdleCallback(startRobot, {
+          timeout: 2500,
+        });
+      } else {
+        startRobot();
+      }
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+
+      if (
+        idleId !== undefined &&
+        "cancelIdleCallback" in window
+      ) {
+        window.cancelIdleCallback(idleId);
+      }
+    };
+  }, []);
 
   return (
     <main className="portfolio">
@@ -199,10 +232,14 @@ function App() {
               AI COMPANION / ONLINE
             </div>
 
-            {/* LAZY-LOADED 3D ROBOT */}
-            <Suspense fallback={<RobotFallback />}>
-              <RobotScene variant="hero" />
-            </Suspense>
+            {/* DEFERRED 3D ROBOT */}
+            {showRobot ? (
+              <Suspense fallback={<RobotFallback />}>
+                <RobotScene variant="hero" />
+              </Suspense>
+            ) : (
+              <RobotFallback />
+            )}
 
             {/* FLOATING TECH LABELS */}
             <div className="floating-label label-top">

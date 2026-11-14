@@ -1,5 +1,5 @@
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import Robot from "./Robot";
@@ -7,20 +7,44 @@ import Robot from "./Robot";
 export default function RobotScene({ variant = "about" }) {
   const isHero = variant === "hero";
 
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 768px)").matches
+      : false
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+
+    const updateMobile = () => {
+      setIsMobile(mediaQuery.matches);
+    };
+
+    updateMobile();
+
+    mediaQuery.addEventListener("change", updateMobile);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateMobile);
+    };
+  }, []);
+
   return (
     <div className={`robot-scene robot-scene--${variant}`}>
       <Canvas
         camera={{
           position: isHero ? [0, 0.3, 6.2] : [0, 0.1, 5],
-          fov: isHero ? 42 : 42,
+          fov: 42,
           near: 0.1,
           far: 100,
         }}
-        dpr={[1, 1.5]}
+        dpr={isMobile ? 1 : [1, 1.5]}
         gl={{
-          antialias: true,
+          antialias: !isMobile,
           alpha: true,
-          powerPreference: "high-performance",
+          powerPreference: isMobile
+            ? "low-power"
+            : "high-performance",
         }}
       >
         {/* GENERAL LIGHTING */}
@@ -81,7 +105,7 @@ export default function RobotScene({ variant = "about" }) {
         <Stars
           radius={15}
           depth={10}
-          count={isHero ? 130 : 100}
+          count={isMobile ? 45 : isHero ? 130 : 100}
           factor={1.2}
           saturation={0}
           fade
