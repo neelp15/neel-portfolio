@@ -1,0 +1,106 @@
+
+/* =========================================
+   NEEL CYBER WORDMARK
+========================================= */
+
+.neel-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 125px;
+  height: 48px;
+
+  color: #f5f3ff;
+  text-decoration: none;
+
+  transition: transform 0.3s ease;
+}
+
+.neel-logo-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.neel-logo-letters {
+  transition:
+    stroke 0.3s ease,
+    filter 0.3s ease;
+}
+
+.neel-logo-accent {
+  transition:
+    stroke 0.3s ease,
+    filter 0.3s ease;
+}
+
+.neel-logo-signal {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+/* HOVER */
+
+.neel-logo:hover {
+  transform: translateY(-2px);
+}
+
+.neel-logo:hover .neel-logo-letters {
+  filter: drop-shadow(
+    0 0 5px rgba(167, 139, 250, 0.45)
+  );
+}
+
+.neel-logo:hover .neel-logo-accent {
+  stroke: #c4b5fd;
+  filter: drop-shadow(
+    0 0 7px rgba(167, 139, 250, 0.8)
+  );
+}
+
+.neel-logo:hover .neel-logo-signal {
+  transform: scale(1.5);
+  filter: drop-shadow(
+    0 0 6px rgba(0, 217, 255, 0.9)
+  );
+}
+
+/* KEYBOARD ACCESSIBILITY */
+
+.neel-logo:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 5px;
+  border-radius: 4px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+  .neel-logo {
+    width: 105px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 480px) {
+  .neel-logo {
+    width: 95px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neel-logo,
+  .neel-logo-letters,
+  .neel-logo-accent,
+  .neel-logo-signal {
+    transition: none;
+  }
+}
