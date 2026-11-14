@@ -15,12 +15,16 @@ const COLORS = {
   pink: "#f472d0",
 };
 
+/* -----------------------------------------
+   ROBOT EYES
+----------------------------------------- */
+
 function RobotEye({ position }) {
   return (
     <group position={position}>
-      {/* Eye glow */}
+      {/* Soft cyan eye glow */}
       <mesh position={[0, 0, -0.015]}>
-        <sphereGeometry args={[0.105, 20, 20]} />
+        <sphereGeometry args={[0.105, 16, 12]} />
         <meshBasicMaterial
           color={COLORS.cyan}
           transparent
@@ -28,9 +32,9 @@ function RobotEye({ position }) {
         />
       </mesh>
 
-      {/* Eye */}
+      {/* Bright eye */}
       <mesh>
-        <sphereGeometry args={[0.062, 20, 20]} />
+        <sphereGeometry args={[0.062, 16, 12]} />
         <meshStandardMaterial
           color={COLORS.cyan}
           emissive={COLORS.cyan}
@@ -42,7 +46,14 @@ function RobotEye({ position }) {
   );
 }
 
+/* -----------------------------------------
+   ROBOT ARMS
+----------------------------------------- */
+
 function RobotArm({ side = 1, armRef }) {
+  const accentColor =
+    side === 1 ? COLORS.cyan : COLORS.purple;
+
   return (
     <group
       ref={armRef}
@@ -50,7 +61,7 @@ function RobotArm({ side = 1, armRef }) {
     >
       {/* Shoulder joint */}
       <mesh>
-        <sphereGeometry args={[0.16, 24, 24]} />
+        <sphereGeometry args={[0.16, 16, 12]} />
         <meshStandardMaterial
           color={COLORS.silver}
           metalness={0.65}
@@ -63,7 +74,7 @@ function RobotArm({ side = 1, armRef }) {
         <RoundedBox
           args={[0.23, 0.55, 0.29]}
           radius={0.1}
-          smoothness={4}
+          smoothness={3}
         >
           <meshStandardMaterial
             color={COLORS.graphite}
@@ -75,15 +86,13 @@ function RobotArm({ side = 1, armRef }) {
         {/* Arm accent */}
         <mesh position={[0, -0.06, 0.155]}>
           <boxGeometry args={[0.12, 0.045, 0.015]} />
-          <meshBasicMaterial
-            color={side === 1 ? COLORS.cyan : COLORS.purple}
-          />
+          <meshBasicMaterial color={accentColor} />
         </mesh>
       </group>
 
       {/* Wrist */}
       <mesh position={[side * 0.06, -0.62, 0]}>
-        <sphereGeometry args={[0.105, 20, 20]} />
+        <sphereGeometry args={[0.105, 16, 12]} />
         <meshStandardMaterial
           color={COLORS.dark}
           metalness={0.65}
@@ -93,14 +102,12 @@ function RobotArm({ side = 1, armRef }) {
 
       {/* Rounded robotic hand */}
       <mesh position={[side * 0.06, -0.76, 0]}>
-        <sphereGeometry args={[0.13, 24, 24]} />
+        <sphereGeometry args={[0.13, 16, 12]} />
         <meshStandardMaterial
-          color={side === 1 ? COLORS.cyan : COLORS.purple}
+          color={accentColor}
           metalness={0.3}
           roughness={0.3}
-          emissive={
-            side === 1 ? COLORS.cyan : COLORS.purple
-          }
+          emissive={accentColor}
           emissiveIntensity={0.3}
         />
       </mesh>
@@ -108,14 +115,25 @@ function RobotArm({ side = 1, armRef }) {
   );
 }
 
+/* -----------------------------------------
+   MAIN ROBOT
+----------------------------------------- */
+
 export default function Robot({ variant = "about" }) {
   const isHero = variant === "hero";
+
   const robotRef = useRef();
   const headRef = useRef();
   const eyesRef = useRef();
+
   const leftArmRef = useRef();
   const rightArmRef = useRef();
+
   const reactorRef = useRef();
+
+  /* -----------------------------------------
+     ROBOT ANIMATIONS
+  ----------------------------------------- */
 
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
@@ -132,9 +150,10 @@ export default function Robot({ variant = "about" }) {
       1
     );
 
+    // Frame-rate-independent smoothing
     const smooth = 1 - Math.exp(-5 * delta);
 
-    // Body follows cursor subtly
+    // Body subtly follows the cursor
     if (robotRef.current) {
       robotRef.current.rotation.y = THREE.MathUtils.lerp(
         robotRef.current.rotation.y,
@@ -149,7 +168,7 @@ export default function Robot({ variant = "about" }) {
       );
     }
 
-    // Head follows mouse
+    // Head follows the cursor
     if (headRef.current) {
       headRef.current.rotation.y = THREE.MathUtils.lerp(
         headRef.current.rotation.y,
@@ -164,7 +183,7 @@ export default function Robot({ variant = "about" }) {
       );
     }
 
-    // Eyes follow mouse independently
+    // Eyes track cursor independently
     if (eyesRef.current) {
       eyesRef.current.position.x = THREE.MathUtils.lerp(
         eyesRef.current.position.x,
@@ -179,7 +198,7 @@ export default function Robot({ variant = "about" }) {
       );
     }
 
-    // Gentle arm animation
+    // Gentle arm movements
     if (leftArmRef.current) {
       leftArmRef.current.rotation.z =
         -0.08 + Math.sin(time * 1.5) * 0.045;
@@ -190,9 +209,11 @@ export default function Robot({ variant = "about" }) {
         0.08 - Math.sin(time * 1.5 + 1) * 0.045;
     }
 
-    // Reactor pulse
+    // Pulsing reactor
     if (reactorRef.current) {
-      const pulse = 1 + Math.sin(time * 2.5) * 0.07;
+      const pulse =
+        1 + Math.sin(time * 2.5) * 0.07;
+
       reactorRef.current.scale.setScalar(pulse);
     }
   });
@@ -205,16 +226,21 @@ export default function Robot({ variant = "about" }) {
     >
       <group
         ref={robotRef}
-        position={isHero ? [0, -0.38, 0] : [0, -0.08, 0]}
+        position={
+          isHero ? [0, -0.38, 0] : [0, -0.08, 0]
+        }
         scale={isHero ? 1.15 : 0.85}
       >
-        {/* ROBOT BODY */}
+        {/* =====================================
+            ROBOT BODY
+        ===================================== */}
 
         <group position={[0, -0.16, 0]}>
+          {/* Main body */}
           <RoundedBox
             args={[1.12, 1.12, 0.62]}
             radius={0.23}
-            smoothness={5}
+            smoothness={3}
           >
             <meshStandardMaterial
               color={COLORS.graphite}
@@ -227,7 +253,7 @@ export default function Robot({ variant = "about" }) {
           <RoundedBox
             args={[0.87, 0.79, 0.1]}
             radius={0.14}
-            smoothness={4}
+            smoothness={3}
             position={[0, 0.05, 0.36]}
           >
             <meshStandardMaterial
@@ -243,21 +269,27 @@ export default function Robot({ variant = "about" }) {
               key={x}
               position={[x, 0.22, 0.42]}
             >
-              <boxGeometry args={[0.035, 0.24, 0.015]} />
+              <boxGeometry
+                args={[0.035, 0.24, 0.015]}
+              />
               <meshBasicMaterial
                 color={COLORS.purple}
               />
             </mesh>
           ))}
 
-          {/* Chest reactor */}
+          {/* =====================================
+              CHEST REACTOR
+          ===================================== */}
+
           <group
             ref={reactorRef}
             position={[0, -0.08, 0.44]}
           >
+            {/* Outer cyan ring */}
             <mesh>
               <torusGeometry
-                args={[0.19, 0.035, 12, 48]}
+                args={[0.19, 0.035, 8, 32]}
               />
               <meshStandardMaterial
                 color={COLORS.cyan}
@@ -267,15 +299,17 @@ export default function Robot({ variant = "about" }) {
               />
             </mesh>
 
+            {/* Dark reactor center */}
             <mesh position={[0, 0, -0.025]}>
-              <circleGeometry args={[0.145, 40]} />
+              <circleGeometry args={[0.145, 32]} />
               <meshBasicMaterial
                 color={COLORS.face}
               />
             </mesh>
 
+            {/* Purple inner core */}
             <mesh position={[0, 0, 0.01]}>
-              <circleGeometry args={[0.09, 40]} />
+              <circleGeometry args={[0.09, 32]} />
               <meshBasicMaterial
                 color={COLORS.purple}
                 transparent
@@ -285,11 +319,13 @@ export default function Robot({ variant = "about" }) {
           </group>
         </group>
 
-        {/* NECK */}
+        {/* =====================================
+            NECK
+        ===================================== */}
 
         <mesh position={[0, 0.47, 0]}>
           <cylinderGeometry
-            args={[0.15, 0.17, 0.2, 24]}
+            args={[0.15, 0.17, 0.2, 16]}
           />
           <meshStandardMaterial
             color={COLORS.silver}
@@ -298,7 +334,9 @@ export default function Robot({ variant = "about" }) {
           />
         </mesh>
 
-        {/* HEAD */}
+        {/* =====================================
+            HEAD
+        ===================================== */}
 
         <group
           ref={headRef}
@@ -308,7 +346,7 @@ export default function Robot({ variant = "about" }) {
           <RoundedBox
             args={[1.1, 0.82, 0.7]}
             radius={0.24}
-            smoothness={6}
+            smoothness={3}
           >
             <meshStandardMaterial
               color={COLORS.helmet}
@@ -321,7 +359,7 @@ export default function Robot({ variant = "about" }) {
           <RoundedBox
             args={[0.9, 0.57, 0.07]}
             radius={0.19}
-            smoothness={5}
+            smoothness={3}
             position={[0, -0.015, 0.37]}
           >
             <meshStandardMaterial
@@ -336,11 +374,16 @@ export default function Robot({ variant = "about" }) {
             ref={eyesRef}
             position={[0, 0.045, 0.43]}
           >
-            <RobotEye position={[-0.21, 0, 0]} />
-            <RobotEye position={[0.21, 0, 0]} />
+            <RobotEye
+              position={[-0.21, 0, 0]}
+            />
+
+            <RobotEye
+              position={[0.21, 0, 0]}
+            />
           </group>
 
-          {/* Small friendly smile */}
+          {/* Friendly smile */}
           <mesh
             position={[0, -0.18, 0.416]}
             rotation={[0, 0, Math.PI]}
@@ -353,7 +396,10 @@ export default function Robot({ variant = "about" }) {
             />
           </mesh>
 
-          {/* Side panels */}
+          {/* =====================================
+              SIDE PANELS
+          ===================================== */}
+
           {[-1, 1].map((side) => (
             <group
               key={side}
@@ -362,7 +408,7 @@ export default function Robot({ variant = "about" }) {
               <RoundedBox
                 args={[0.1, 0.31, 0.32]}
                 radius={0.04}
-                smoothness={4}
+                smoothness={3}
               >
                 <meshStandardMaterial
                   color={COLORS.dark}
@@ -371,6 +417,7 @@ export default function Robot({ variant = "about" }) {
                 />
               </RoundedBox>
 
+              {/* Side indicator */}
               <mesh
                 position={[
                   side * 0.055,
@@ -379,7 +426,7 @@ export default function Robot({ variant = "about" }) {
                 ]}
               >
                 <sphereGeometry
-                  args={[0.055, 16, 16]}
+                  args={[0.055, 12, 10]}
                 />
                 <meshBasicMaterial
                   color={COLORS.purple}
@@ -388,7 +435,11 @@ export default function Robot({ variant = "about" }) {
             </group>
           ))}
 
-          {/* Antenna */}
+          {/* =====================================
+              ANTENNA
+          ===================================== */}
+
+          {/* Antenna stem */}
           <mesh position={[0, 0.51, 0]}>
             <cylinderGeometry
               args={[0.025, 0.035, 0.3, 12]}
@@ -400,9 +451,10 @@ export default function Robot({ variant = "about" }) {
             />
           </mesh>
 
+          {/* Glowing antenna tip */}
           <mesh position={[0, 0.69, 0]}>
             <sphereGeometry
-              args={[0.075, 20, 20]}
+              args={[0.075, 16, 12]}
             />
             <meshStandardMaterial
               color={COLORS.cyan}
@@ -413,7 +465,9 @@ export default function Robot({ variant = "about" }) {
           </mesh>
         </group>
 
-        {/* ROBOT ARMS */}
+        {/* =====================================
+            ROBOT ARMS
+        ===================================== */}
 
         <RobotArm
           side={-1}
@@ -425,12 +479,14 @@ export default function Robot({ variant = "about" }) {
           armRef={rightArmRef}
         />
 
-        {/* LOWER BODY */}
+        {/* =====================================
+            LOWER BODY
+        ===================================== */}
 
         <RoundedBox
           args={[0.7, 0.23, 0.46]}
           radius={0.08}
-          smoothness={4}
+          smoothness={3}
           position={[0, -0.83, 0]}
         >
           <meshStandardMaterial
@@ -442,7 +498,9 @@ export default function Robot({ variant = "about" }) {
 
         {/* Lower accent */}
         <mesh position={[0, -0.83, 0.245]}>
-          <boxGeometry args={[0.28, 0.025, 0.012]} />
+          <boxGeometry
+            args={[0.28, 0.025, 0.012]}
+          />
           <meshBasicMaterial
             color={COLORS.purple}
           />
